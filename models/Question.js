@@ -8,11 +8,11 @@ const QuestionSchema = new mongoose.Schema({
     default: Date.now(),
   },
   answers: {
-    type: mongoose.Schema.Types.ObjectId,
+    type: mongoose.Types.ObjectId,
     ref: "Answers",
   },
   user: {
-    type: mongoose.Schema.Types.ObjectId,
+    type: mongoose.Types.ObjectId,
     ref: "user",
   },
 });
