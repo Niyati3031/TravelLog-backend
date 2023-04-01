@@ -12,7 +12,7 @@ router.post("/", async (req, res) => {
         user: req.body.user,
       })
       .then(() => {
-        res.status(201).send({
+        res.status(200).send({
           status: true,
           message: "Answer added successfully",
         });
