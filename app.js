@@ -28,7 +28,7 @@ app.use("/answers", ansRouter);
 mongoose.connect(
     `mongodb+srv://admin:${process.env.MONGODB_PASSWORD}@cluster0.ccblsit.mongodb.net/?retryWrites=true&w=majority`
     )
-    .then(() => app.listen(5050,() => console.log('listening to localhost post 5050'))
+    .then(() => app.listen(5050,() => console.log('listening to localhost port 5050'))
     )
     .catch((err) => console.log(err));
 
