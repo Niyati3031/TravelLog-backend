@@ -15,9 +15,10 @@ dotenv.config();
 //middlewares
 app.use(bodyParser.json({ limit: "50mb" }));
 app.use(bodyParser.urlencoded({ extended: true, limit: "50mb" }));
-app.use(cors({
-    origin: ["http://localhost:3000", "https://travel-mania.onrender.com/"]
-}));
+app.use(cors());
+//{
+    // origin: ["http://localhost:3000", "https://travel-mania.onrender.com/"]
+// }
 app.use(express.json());
 app.use("/users", userRouter); 
 app.use("/posts", postRouter);
