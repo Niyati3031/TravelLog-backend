@@ -1,6 +1,6 @@
 const bcrypt = require("bcryptjs");
-const User =  require("../models/User");
-
+const {User, validate} =  require("../models/User");
+const Joi = require("joi");
 
 exports.getAllUsers = async(req, res) => {
     let users;
@@ -16,11 +16,24 @@ exports.getAllUsers = async(req, res) => {
 };
 
 exports.signup = async(req, res, next) => {
-    const {name, email, password } = req.body;
+    try {
+        const { error } = validate(req.body);
+        if (error)
+			return res.status(400).send({ message: error.details[0].message });
+        const {name, email, password } = req.body;
     if(!name && name.trim() =="" && !email && email.trim() =="" && !password && password.trim() == "" && password.length <6){
         return res.status(422).json({message: "Invalid data"});
     }
     const hashedPassword = bcrypt.hashSync(password);
+    let existingUser;
+        try{
+            existingUser = await User.findOne({email});
+        }catch(err){
+            return console.log(err);
+        }
+        if(existingUser){
+            return res.status(404).json({message: "User Already Exists"});
+        }
     let user;
     try {
         user = new User({email, name, password: hashedPassword});
@@ -33,30 +46,47 @@ exports.signup = async(req, res, next) => {
         return res.status(500).json({message: "Unexpected Error Occured"});
     }
 
-    return res.status(201).json({user});
+    return res.status(201).json({message: "created succesdfully", id: user._id});
+    } catch (error) {
+        res.status(500).send({ message: "Internal Server Error" });
+    }
+    
+};
+
+const Validate = (data) => {
+	const schema = Joi.object({
+		email: Joi.string().email().required().label("Email"),
+		password: Joi.string().required().label("Password"),
+	});
+	return schema.validate(data);
 };
 
 exports.login = async (req, res, next) =>{
-    const {email, password} = req.body;
-    if(!email && email.trim() =="" && !password && password.trim() == "" && password.length <6){
-        return res.status(422).json({message: "Invalid data"});
-    }
+        const { error } = Validate(req.body);
+		if (error)
+			return res.status(400).send({ message: error.details[0].message });
+        const {email, password} = req.body;
+        if(!email && email.trim() =="" && !password && password.trim() == "" && password.length <6){
+            return res.status(422).json({message: "Invalid data"});
+        }
+    
+        let existingUser;
+        try{
+            existingUser = await User.findOne({email});
+        }catch(err){
+            return console.log(err);
+        }
+        if(!existingUser){
+            return res.status(404).json({message: "No user found"});
+        }
+    
+        const isPassCorrect = bcrypt.compareSync(password, existingUser.password);
+        if(!isPassCorrect){
+            return res.status(400).json({message: "Incorrect password"});
+        }
+        const token = existingUser.generateAuthToken();
+		res.status(200).send({ data: token, message: "logged in successfully" , id: existingUser._id});
 
-    let existingUser;
-    try{
-        existingUser = await User.findOne({email});
-    }catch(err){
-        return console.log(err);
-    }
-    if(!existingUser){
-        return res.status(404).json({message: "No user found"});
-    }
-
-    const isPassCorrect = bcrypt.compareSync(password, existingUser.password);
-    if(!isPassCorrect){
-        return res.status(400).json({message: "Incorrect password"});
-    }
-    return res.status(200).json({id: existingUser.id, message: "Login Successful"});
 };
 
 exports.getUserById = async(req, res) => {
